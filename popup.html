@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo"></div>
+      <div class="title">SecureClip Monitor</div>
+    </div>
+
+    <div id="status" class="status disconnected">
+      Not Connected
+    </div>
+
+    <div id="loginForm" class="login-form">
+      <div class="form-group">
+        <label for="apiUrl">Flask API URL</label>
+        <input type="text" id="apiUrl" placeholder="http://localhost:5000/api" value="http://localhost:5000/api">
+      </div>
+      <div class="form-group">
+        <label for="authToken">Auth Token</label>
+        <input type="password" id="authToken" placeholder="Your authentication token">
+      </div>
+      <div class="form-group">
+        <label for="openaiKey">OpenAI API Key</label>
+        <input type="password" id="openaiKey" placeholder="Your OpenAI API key for AI scanning">
+      </div>
+      <button id="connectBtn">Connect</button>
+    </div>
+
+    <div id="dashboard" style="display: none;">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="blockedCount">0</div>
+          <div class="stat-label">Blocked Today</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="allowedCount">0</div>
+          <div class="stat-label">Allowed Today</div>
+        </div>
+      </div>
+
+      <div class="clipboard-section">
+        <h3>Clipboard Monitor</h3>
+        <div class="toggle-group">
+          <label class="toggle-label">
+            <input type="checkbox" id="autoScan" checked>
+            <span class="toggle-slider"></span>
+            Auto-scan clipboard
+          </label>
+          <label class="toggle-label">
+            <input type="checkbox" id="aiScan" checked>
+            <span class="toggle-slider"></span>
+            Use AI scanning
+          </label>
+        </div>
+        <button id="scanNow" class="btn-primary">Scan Clipboard Now</button>
+      </div>
+
+      <div class="rules-summary">
+        <div class="rules-title">Domain Rules</div>
+        <div id="domainRules">
+          <div class="rule-item">
+            <span class="rule-domain">Loading rules...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="recent-scans">
+        <h3>Recent Scans</h3>
+        <div id="scanHistory"></div>
+      </div>
+
+      <div class="actions">
+        <button id="openDashboard" class="btn-secondary">Open Dashboard</button>
+        <button id="disconnectBtn" class="btn-secondary">Disconnect</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="utils/openai.js"></script>
+  <script src="utils/validator.js"></script>
+  <script src="crypto.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
