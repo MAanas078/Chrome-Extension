@@ -1,4 +1,8 @@
-// Content validation and threat detection utilities
+// validator.js
+
+/**
+ * ContentValidator: Utility for threat detection and content validation.
+ */
 class ContentValidator {
   constructor() {
     this.threatPatterns = [
@@ -11,7 +15,7 @@ class ContentValidator {
       },
       {
         name: 'API Key Pattern',
-        regex: /(?:api[_-]?key|token|secret)\s*[:=]\s*[A-Za-z0-9_-]{20,}/gi,
+        regex: /(?:api[_-]?key|token|secret)\s*[:=]\s*[A-Za-z0-9._-]{20,}/gi,
         severity: 'high',
         description: 'Potential API key or token detected'
       },
@@ -37,7 +41,7 @@ class ContentValidator {
       },
       {
         name: 'Email Address',
-        regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+        regex: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g,
         severity: 'medium',
         description: 'Email address detected'
       },
@@ -63,7 +67,7 @@ class ContentValidator {
       },
       {
         name: 'Command Injection',
-        regex: /(?:;|\||&|\$\(|\`).+(?:rm\s+-rf|wget|curl|nc\s+)/gi,
+        regex: /(?:;|\||&|\$\(|`)\s*.*(?:rm\s+-rf|wget|curl|nc\s+)/gi,
         severity: 'critical',
         description: 'Potential command injection'
       },
@@ -92,11 +96,16 @@ class ContentValidator {
     ];
   }
 
+  /**
+   * Main validation entry point.
+   * @param {string} content
+   * @returns {object} Validation result
+   */
   validateContent(content) {
     const threats = [];
     let maxSeverity = 'safe';
-    
-    // Check against threat patterns
+
+    // Pattern-based threat detection
     for (const pattern of this.threatPatterns) {
       const matches = content.match(pattern.regex);
       if (matches) {
@@ -105,28 +114,27 @@ class ContentValidator {
           description: pattern.description,
           severity: pattern.severity,
           matches: matches.length,
-          sample: matches[0].substring(0, 50)
+          sample: matches[0]?.substring(0, 50)
         });
 
-        // Update max severity
-        if (pattern.severity === 'critical' || 
-           (pattern.severity === 'high' && maxSeverity !== 'critical') ||
-           (pattern.severity === 'medium' && maxSeverity === 'safe')) {
+        // Escalate severity
+        if (pattern.severity === 'critical' ||
+            (pattern.severity === 'high' && maxSeverity !== 'critical') ||
+            (pattern.severity === 'medium' && maxSeverity === 'safe')) {
           maxSeverity = pattern.severity;
         }
       }
     }
 
-    // Check URLs
+    // Check URLs for blacklisted domains
     const urlMatches = content.match(/https?:\/\/[^\s]+/gi);
     if (urlMatches) {
       for (const url of urlMatches) {
         const domain = this.extractDomain(url);
-        
         if (this.domainBlacklist.includes(domain)) {
           threats.push({
             type: 'Blacklisted Domain',
-            description: `Blocked domain: ${domain}`,
+            description: **Blocked domain: ${domain}**,
             severity: 'high',
             matches: 1,
             sample: url
@@ -136,10 +144,9 @@ class ContentValidator {
       }
     }
 
-    // Determine overall classification
+    // Final classification
     let classification = 'safe';
     let action = 'allowed';
-
     if (maxSeverity === 'critical') {
       classification = 'blocked';
       action = 'blocked';
@@ -162,6 +169,11 @@ class ContentValidator {
     };
   }
 
+  /**
+   * Calculates a risk score based on threat severities.
+   * @param {Array} threats
+   * @returns {number} Risk score (max 10)
+   */
   calculateRiskScore(threats) {
     let score = 0;
     for (const threat of threats) {
@@ -175,16 +187,26 @@ class ContentValidator {
     return Math.min(10, score);
   }
 
+  /**
+   * Attempts to classify the content type.
+   * @param {string} content
+   * @returns {string} Content type
+   */
   detectContentType(content) {
-    if (content.match(/^[A-Za-z0-9+/]+=*$/)) return 'base64';
-    if (content.match(/^[0-9a-f]{32,}$/i)) return 'hash';
-    if (content.match(/https?:\/\//)) return 'url';
-    if (content.match(/(?:function|class|var|const|let)\s+/)) return 'code';
-    if (content.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}/)) return 'email';
-    if (content.match(/\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}/)) return 'credentials';
+    if (/^[A-Za-z0-9+/]+=*$/.test(content)) return 'base64';
+    if (/^[0-9a-f]{32,}$/i.test(content)) return 'hash';
+    if (/https?:\/\//.test(content)) return 'url';
+    if (/(function|class|var|const|let)\s+/.test(content)) return 'code';
+    if (/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.test(content)) return 'email';
+    if (/\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}/.test(content)) return 'credentials';
     return 'text';
   }
 
+  /**
+   * Extracts the domain from a URL string.
+   * @param {string} url
+   * @returns {string} domain
+   */
   extractDomain(url) {
     try {
       return new URL(url).hostname.toLowerCase();
@@ -193,6 +215,11 @@ class ContentValidator {
     }
   }
 
+  /**
+   * Checks if a domain is allowed (not blacklisted, optionally whitelisted).
+   * @param {string} domain
+   * @returns {boolean}
+   */
   isDomainAllowed(domain) {
     if (this.domainBlacklist.includes(domain)) return false;
     if (this.domainWhitelist.length === 0) return true;
@@ -200,9 +227,9 @@ class ContentValidator {
   }
 }
 
-// Export for use in other scripts
-if (typeof module !== 'undefined' && module.exports) {
+// --- Export for ES6 modules and fallback for browser/global ---
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
   module.exports = ContentValidator;
-} else {
+} else if (typeof window !== 'undefined') {
   window.ContentValidator = ContentValidator;
 }
